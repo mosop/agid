@@ -1,0 +1,12 @@
+name: agid
+version: 0.1.0
+
+authors:
+  - mosop
+
+license: MIT
+
+development_dependencies:
+  cli:
+    github: mosop/cli
+    version: ~> 0.2.3

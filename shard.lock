@@ -1,8 +1,16 @@
 version: 1.0
 shards:
+  agid:
+    github: mosop/agid
+    version: 0.1.0
+
   cli:
     github: mosop/cli
     version: 0.2.3
+
+  crystal_plus:
+    github: mosop/crystal_plus
+    version: 0.1.2
 
   optarg:
     github: mosop/optarg
@@ -14,5 +22,5 @@ shards:
 
   string_inflection:
     github: mosop/string_inflection
-    version: 0.1.5
+    version: 0.1.6
 

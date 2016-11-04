@@ -2,6 +2,8 @@ require "../../agid"
 
 module Agid::Main::Commands::Generate::Commands
   class Singulars < Cli::Command
+    alias Diff = NamedTuple(singular: String, cut: Int32, tail: String)
+
     class Options
       arg "language", required: true
       arg "module_name", required: true
@@ -34,7 +36,7 @@ module Agid::Main::Commands::Generate::Commands
       substring ||= singular
       raise "unmatched forms: #{singular} #{plural}" if substring.size == 0
       if plural.starts_with?(substring)
-        {cut: singular.size - substring.size, tail: plural[(substring.size)..-1]}
+        {singular: singular, cut: singular.size - substring.size, tail: plural[(substring.size)..-1]}
       else
         diff(singular, plural, substring[0..-2])
       end
@@ -48,9 +50,9 @@ module Agid::Main::Commands::Generate::Commands
     def inspect_diff(diff)
       case args.language
       when "crystal"
-        diff.inspect
+        diff[:singular].inspect + " => " + {cut: diff[:cut], tail: diff[:tail], uptail: diff[:tail].upcase}.inspect
       when "ruby"
-        "[#{diff[:cut]}, #{diff[:tail].inspect}]"
+        diff[:singular].inspect + " => " + [diff[:cut], diff[:tail], diff[:tail].upcase].inspect
       else
         raise "Unknown language: #{args.language}"
       end
@@ -62,10 +64,7 @@ module Agid::Main::Commands::Generate::Commands
     end
 
     def run
-      result_io.puts <<-EOS
-      module #{args.module_name}
-        @@singulars = {
-      EOS
+      diffs = [] of Diff
 
       Agid.singulars_plurals.each do |singular, plural|
         diff = diff(singular, plural)
@@ -109,16 +108,22 @@ module Agid::Main::Commands::Generate::Commands
         cuttail = "#{diff[:cut].to_s.ljust(2)} #{diff[:tail]}"
         SUMMARY[cuttail] ||= 0
         SUMMARY[cuttail] += 1
+        diffs << diff
+      end
+
+      result_io.puts <<-EOS
+      module #{args.module_name}
+        SINGULARS = {
+      EOS
+
+      diffs.each do |diff|
         result_io.puts <<-EOS
-            "#{singular}" => #{inspect_diff(diff)},
+            #{inspect_diff(diff)},
         EOS
       end
 
       result_io.puts <<-EOS
         }
-        def self.singulars
-          @@singulars
-        end
       end
       EOS
     end

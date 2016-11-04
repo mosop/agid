@@ -2,6 +2,8 @@ require "../../agid"
 
 module Agid::Main::Commands::Generate::Commands
   class Plurals < Cli::Command
+    alias Diff = NamedTuple(plural: String, cut: Int32, tail: String)
+
     class Options
       arg "language", required: true
       arg "module_name", required: true
@@ -31,7 +33,7 @@ module Agid::Main::Commands::Generate::Commands
       substring ||= plural
       raise "unmatched forms: #{singular} #{plural}" if substring.size == 0
       if singular.starts_with?(substring)
-        {cut: plural.size - substring.size, tail: singular[(substring.size)..-1]}
+        {plural: plural, cut: plural.size - substring.size, tail: singular[(substring.size)..-1]}
       else
         diff(singular, plural, substring[0..-2])
       end
@@ -45,19 +47,16 @@ module Agid::Main::Commands::Generate::Commands
     def inspect_diff(diff)
       case args.language
       when "crystal"
-        diff.inspect
+        diff[:plural].inspect + " => " + {cut: diff[:cut], tail: diff[:tail], uptail: diff[:tail].upcase}.inspect
       when "ruby"
-        "[#{diff[:cut]}, #{diff[:tail].inspect}]"
+        diff[:plural].inspect + " => " + [diff[:cut], diff[:tail], diff[:tail].upcase].inspect
       else
         raise "Unknown language: #{args.language}"
       end
     end
 
     def run
-      result_io.puts <<-EOS
-        module #{args.module_name}
-          @@plurals = {
-        EOS
+      diffs = [] of Diff
 
       Agid.plurals_singulars.each do |plural, singular|
         diff = diff(singular, plural)
@@ -103,16 +102,22 @@ module Agid::Main::Commands::Generate::Commands
         cuttail = "#{diff[:cut].to_s.ljust(2)} #{diff[:tail]}"
         SUMMARY[cuttail] ||= 0
         SUMMARY[cuttail] += 1
+        diffs << diff
+      end
+
+      result_io.puts <<-EOS
+      module #{args.module_name}
+        PLURALS = {
+      EOS
+
+      diffs.each do |diff|
         result_io.puts <<-EOS
-            "#{plural}" => #{inspect_diff(diff)},
+            #{inspect_diff(diff)},
         EOS
       end
 
       result_io.puts <<-EOS
         }
-        def self.plurals
-          @@plurals
-        end
       end
       EOS
     end

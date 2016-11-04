@@ -1,4 +1,5 @@
 require "cli"
+require "crystal_plus/named_tuple/#merge"
 require "./agid"
 
 module Agid

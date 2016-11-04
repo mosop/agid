@@ -10,3 +10,6 @@ development_dependencies:
   cli:
     github: mosop/cli
     version: ~> 0.2.3
+  crystal_plus:
+    github: mosop/crystal_plus
+    version: ~> 0.1.2

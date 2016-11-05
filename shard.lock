@@ -6,7 +6,7 @@ shards:
 
   cli:
     github: mosop/cli
-    version: 0.2.3
+    version: 0.2.3.1
 
   crystal_plus:
     github: mosop/crystal_plus

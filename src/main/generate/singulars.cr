@@ -50,7 +50,7 @@ module Agid::Main::Commands::Generate::Commands
     def inspect_diff(diff)
       case args.language
       when "crystal"
-        diff[:singular].inspect + " => " + {cut: diff[:cut], tail: diff[:tail], uptail: diff[:tail].upcase}.inspect
+        diff[:singular].inspect + " => " + {cut: diff[:cut], tail: [diff[:tail], diff[:tail].upcase]}.inspect
       when "ruby"
         diff[:singular].inspect + " => " + [diff[:cut], diff[:tail], diff[:tail].upcase].inspect
       else
